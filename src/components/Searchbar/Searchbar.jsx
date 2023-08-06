@@ -1,50 +1,47 @@
-import { Component } from 'react';
+import {useState } from 'react';
 import PropTypes from "prop-types";
 import { SearchbarField, Form, Button, Input } from './Searchbar.styled';
 import { FcSearch } from "react-icons/fc";
 
-export class Searchbar extends Component{
-    state = {
-        tag: ''
+export const Searchbar = ({onSubmit}) => {
+    const [tag, setTag] = useState('');
+
+    const inputChange = event => {        
+        setTag( event.currentTarget.value );
     }
 
-    inputChange = event => {        
-        this.setState({ tag: event.currentTarget.value });
-    }
-
-    dataSubmit = event =>{
+    const dataSubmit = event =>{
         event.preventDefault();
-      
-        this.props.onSubmit(this.state);
-        this.reset();
+        //console.log(tag);
+        onSubmit({tag}); 
+        reset();
     }
     
-    reset = () => {
-        this.setState({ tag: '' });
+    const reset = () => {
+        setTag('');
     }
 
-    render() {
-        return (
-            <SearchbarField>
-                <Form onSubmit={this.dataSubmit}>
-                    <Button type="submit">
-                        <FcSearch/>
-                    </Button>
+  
+    return (
+        <SearchbarField>
+            <Form onSubmit={dataSubmit}>
+                <Button type="submit">
+                    <FcSearch/>
+                </Button>
 
-                    <Input
-                        name="name"
-                        value={this.state.tag}
-                        onChange={this.inputChange}
-                        type="text"
-                        autoComplete="off"
-                        autoFocus
-                        required
-                        placeholder="Search images and photos"
-                    />
-                </Form>
-            </SearchbarField>
-        )
-    }
+                <Input
+                    name="name"
+                    value={tag}
+                    onChange={inputChange}
+                    type="text"
+                    autoComplete="off"
+                    autoFocus
+                    required
+                    placeholder="Search images and photos"
+                />
+            </Form>
+        </SearchbarField>
+    )
 }
 
 Searchbar.propTypes = {

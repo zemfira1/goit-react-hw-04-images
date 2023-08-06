@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Container } from './App.styled';
 import { Searchbar } from 'components/Searchbar';
 import { ImageGallery } from 'components/ImageGallery';
@@ -7,71 +7,56 @@ import { Loader } from 'components/Loader';
 import { getPhoto } from 'components/Api';
 import Notiflix from 'notiflix';
 
-export class App extends Component {
+export const App = () => {
+  const [tag, setTag] = useState('');
+  const [images, setImages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isButton, setIsButton] = useState(false);
+  // eslint-disable-next-line
+  const [isError, setIsError] = useState(false);
 
-  state = {
-    tag: '',
-    images: [],
-    currentPage: 1,
-    isLoading: false,
-    isButton: false,
-    isError: false,
-    error: null,  
-    
-  }
-  formSubmit = data => {
-    if (data.tag === this.state.tag) {
+  const formSubmit = data => {
+    if (data.tag === tag) {
       return;
     }
+
+    setTag(data.tag);
+    setImages([]);
+    setCurrentPage(1);
+  }
+
+  useEffect(() => {
+    if (!tag) return;
     
-    this.setState({
-      tag: data.tag,
-      images: [],
-      currentPage: 1,
-    });
+    setIsLoading(true);
+
+    getPhoto(tag, currentPage)
+      .then(r => {  
+        if (r.hits.length === 0) {
+          Notiflix.Notify.failure('Sorry, there are no images matching your search query.');
+          return;
+        }
+        setImages(prevState => [...prevState, ...r.hits]);
+        setIsButton(currentPage < Math.ceil(r.totalHits / 12));
+        }   
+      )
+      .catch(error => setIsError( true, error ))
+      .finally(() => setIsLoading( false ));
+  }, [tag, currentPage])
+
+  const loadMoreImages = () => {
+    setCurrentPage(prevState => prevState + 1);
   }
 
-  componentDidUpdate(_, prevState) {
-    const { tag, currentPage } = this.state;
-    
-    if (prevState.currentPage !== currentPage || prevState.tag !== tag) {    
-      this.setState({ isLoading: true});
+  const arrayLength = images.length; 
 
-      getPhoto(tag, currentPage)
-        .then(r => {  
-          if (r.hits.length === 0) {
-            Notiflix.Notify.failure('Sorry, there are no images matching your search query.');
-            return;
-          }
-
-          this.setState( prevState=> ({
-            images: [...prevState.images, ...r.hits],
-            isButton: this.state.currentPage < Math.ceil(r.totalHits / 12),
-          }));
-          }   
-        )
-        .catch(error => this.setState({isError: true, error}))
-        .finally(() => this.setState({ isLoading: false }));
-    }
-  }
-
-  loadMoreImages = () => {
-    this.setState(prevState => ({
-      currentPage: prevState.currentPage + 1,
-    }));
-  }
-  
-  render() {
-    const arrayLength = this.state.images.length; 
-    const { isLoading, isButton, images } = this.state;
-
-    return (
-      <Container>        
-        <Searchbar onSubmit={this.formSubmit} />
-        {isLoading && <Loader />}
-        {arrayLength!==0 && <ImageGallery images={images} />}        
-        {isButton && <Button onClick={this.loadMoreImages } />}
-      </Container>
-    );
-  } 
+  return (
+    <Container>        
+      <Searchbar onSubmit={formSubmit} />
+      {isLoading && <Loader />}
+      {arrayLength !== 0 && <ImageGallery images={images} />}        
+      {isButton && <Button onClick={loadMoreImages } />}
+    </Container>
+  );
 };

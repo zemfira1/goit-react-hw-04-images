@@ -13,11 +13,11 @@ export const App = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isButton, setIsButton] = useState(false);
-  // eslint-disable-next-line
   const [isError, setIsError] = useState(false);
 
   const formSubmit = data => {
     if (data.tag === tag) {
+      alert('This request is already active!');
       return;
     }
 
@@ -41,7 +41,7 @@ export const App = () => {
         setIsButton(currentPage < Math.ceil(r.totalHits / 12));
         }   
       )
-      .catch(error => setIsError( true, error ))
+      .catch(error => setIsError( error ))
       .finally(() => setIsLoading( false ));
   }, [tag, currentPage])
 
@@ -57,6 +57,7 @@ export const App = () => {
       {isLoading && <Loader />}
       {arrayLength !== 0 && <ImageGallery images={images} />}        
       {isButton && <Button onClick={loadMoreImages } />}
+      {isError && alert('Sorry, something is wrong!')}
     </Container>
   );
 };
